@@ -34,6 +34,10 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Newtonsoft.Json, Version=4.0.8.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\Newtonsoft.Json.4.0.8\lib\net40\Newtonsoft.Json.dll</HintPath>
+    </Reference>
     <Reference Include="NotFoundMvc">
       <HintPath>..\packages\NotFoundMvc.1.0.0\lib\net40\NotFoundMvc.dll</HintPath>
     </Reference>
@@ -76,9 +80,7 @@
     <Content Include="assets\scripts\disqus\disqus.js" />
     <Content Include="assets\scripts\jquery\jquery.js" />
     <Content Include="assets\scripts\home\tweets.js" />
-    <Content Include="assets\scripts\licensing-buy\form.js" />
     <Content Include="assets\styles\buttons.css" />
-    <Content Include="assets\styles\buy.css" />
     <Content Include="assets\styles\code.css" />
     <Content Include="assets\styles\documentation.css" />
     <Content Include="assets\styles\contribute.css" />
@@ -111,7 +113,7 @@
     <Content Include="assets\styles\images\twitter.png" />
     <Content Include="assets\styles\images\whitetwittericon.png" />
     <Content Include="assets\styles\licensing.css" />
-    <Content Include="assets\styles\module.txt" />
+    <Content Include="assets\styles\bundle.txt" />
     <Content Include="assets\styles\normalize.css" />
     <Content Include="assets\styles\page.css" />
     <Content Include="assets\styles\top.css" />
@@ -246,7 +248,18 @@
     <Content Include="Views\Shared\_Share.cshtml" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Views\Documentation\Tutorials.cshtml" />
+  </ItemGroup>
+  <ItemGroup>
     <Content Include="Views\Documentation\Configuration_AddFile.cshtml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Views\Documentation\HtmlTemplates_MustacheHoganJS.cshtml">
+      <SubType>Code</SubType>
+    </Content>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Views\Documentation\Tutorials_TwitterBootstrap.cshtml" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v10.0\WebApplications\Microsoft.WebApplication.targets" />

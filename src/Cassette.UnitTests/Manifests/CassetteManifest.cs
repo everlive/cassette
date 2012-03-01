@@ -1,4 +1,5 @@
 ﻿using System.Linq;
+using Cassette.Configuration;
 using Cassette.Scripts;
 using Cassette.Scripts.Manifests;
 using Cassette.Stylesheets;
@@ -85,11 +86,11 @@ namespace Cassette.Manifests
         {
             var manifest = new CassetteManifest("", new BundleManifest[]
             {
-                new ScriptBundleManifest { Path = "~/js", Hash = new byte[0] },
-                new StylesheetBundleManifest { Path = "~/css", Hash = new byte[0] }
+                new ScriptBundleManifest { Path = "~/js", Hash = new byte[0], Html = () => "" },
+                new StylesheetBundleManifest { Path = "~/css", Hash = new byte[0], Html = () => "" }
             });
 
-            var bundles = manifest.CreateBundles().ToArray();
+            var bundles = manifest.CreateBundleCollection(new CassetteSettings("")).ToArray();
 
             bundles.Length.ShouldEqual(2);
             bundles[0].ShouldBeType<ScriptBundle>();

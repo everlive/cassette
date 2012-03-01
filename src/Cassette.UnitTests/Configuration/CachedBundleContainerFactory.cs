@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.Linq;
 using Cassette.Manifests;
 using Cassette.Scripts;
 using Cassette.Scripts.Manifests;
@@ -25,23 +26,27 @@ namespace Cassette.Configuration
                 "",
                 new[]
                 {
-                    new ScriptBundleManifest { Path = "~", Hash = new byte[] { 1, 2, 3 } }
+                    new ScriptBundleManifest
+                    {
+                        Path = "~",
+                        Hash = new byte[] { 1, 2, 3 },
+                        Html = () => ""
+                    }
                 }
             );
             cache.Setup(c => c.LoadCassetteManifest()).Returns(cachedManifest);
 
-            var factory = CreateFactory();
-            var container = factory.Create(new[] { new ScriptBundle("~") });
+            var scriptBundle = new ScriptBundle("~") { Renderer = new ConstantHtmlRenderer<ScriptBundle>("") };
+            var factory = CreateFactory(new[] { scriptBundle });
+            var container = factory.CreateBundleContainer();
 
             var bundle = container.Bundles.Single();
             bundle.Hash.ShouldEqual(new byte[] { 1, 2, 3 });
-            bundle.IsFromCache.ShouldBeTrue();
-            bundle.IsProcessed.ShouldBeTrue();
         }
 
-        internal override IBundleContainerFactory CreateFactory()
+        internal override IBundleContainerFactory CreateFactory(IEnumerable<Bundle> bundles)
         {
-            return new CachedBundleContainerFactory(cache.Object, Settings);
+            return new CachedBundleContainerFactory(new BundleCollection(Settings, bundles), cache.Object, Settings);
         }
     }
 }

@@ -62,6 +62,7 @@
     <Compile Include="IsolatedStorageContainer.cs" />
     <Compile Include="DelegateCassetteConfigurationFactory.cs" />
     <Compile Include="StartUpTraceRecorder.cs" />
+    <Compile Include="RawFileReferenceFinder.cs" />
     <Compile Include="StringBuilderTraceListener.cs" />
     <None Include="CassetteConfiguration.cs.pp" />
     <Compile Include="CassetteHttpModule.cs" />
@@ -84,6 +85,10 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Cassette.Views\Cassette.Views.csproj">
+      <Project>{3A021487-A395-4FE6-9B41-336D0F1E6AD0}</Project>
+      <Name>Cassette.Views</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Cassette\Cassette.csproj">
       <Project>{A5CCF9D3-5D49-4BFC-B9A6-9EC9E0E29C50}</Project>
       <Name>Cassette</Name>

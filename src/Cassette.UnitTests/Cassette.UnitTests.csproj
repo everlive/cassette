@@ -31,6 +31,10 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="AjaxMin, Version=4.46.4422.26284, Culture=neutral, PublicKeyToken=21ef50ce11b5d80f, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\AjaxMin.4.46.4422.26284\lib\net20\AjaxMin.dll</HintPath>
+    </Reference>
     <Reference Include="Microsoft.Build.Framework" />
     <Reference Include="Microsoft.Build.Utilities.v4.0" />
     <Reference Include="Moq, Version=4.0.10827.0, Culture=neutral, PublicKeyToken=69f491c39445e920, processorArchitecture=MSIL">
@@ -60,8 +64,10 @@
     <Compile Include="AssetReference.cs" />
     <Compile Include="Manifests\AssetManifestWriter.cs" />
     <Compile Include="Manifests\BundleManifest.cs" />
+    <Compile Include="Manifests\BundleManifestReader.cs" />
     <Compile Include="Manifests\CassetteManifest.cs" />
     <Compile Include="Manifests\CassetteManifestCache.cs" />
+    <Compile Include="Manifests\BundleManifestBuilder.cs" />
     <Compile Include="MSBuild\CreateBundlesImplementation.cs" />
     <Compile Include="Scripts\Manifests\ExternalScriptBundleManifestReader.cs" />
     <Compile Include="Scripts\Manifests\ScriptBundleManifestReader.cs" />
@@ -107,9 +113,11 @@
     <Compile Include="Scripts\Manifests\ScriptBundleManifestBuilder.cs" />
     <Compile Include="Scripts\CoffeeScriptCommentParser.cs" />
     <Compile Include="Scripts\JavaScriptCommentParser.cs" />
+    <Compile Include="Scripts\Manifests\ScriptBundleManifestWriter.cs" />
     <Compile Include="Scripts\ScriptBundle.cs" />
     <Compile Include="Stylesheets\AssignStylesheetRenderer.cs" />
     <Compile Include="Stylesheets\CssCommentParser.cs" />
+    <Compile Include="Stylesheets\LessCompiler.cs" />
     <Compile Include="Stylesheets\Manifests\ExternalStylesheetBundleManifest.cs" />
     <Compile Include="Stylesheets\Manifests\ExternalStylesheetBundleManifestBuilder.cs" />
     <Compile Include="Stylesheets\Manifests\ExternalStylesheetBundleManifestReader.cs" />
@@ -147,7 +155,6 @@
     <Compile Include="Stylesheets\StylesheetPipeline.cs" />
     <Compile Include="TestableBundle.cs" />
     <Compile Include="Views\Bundles.cs" />
-    <Compile Include="Web\Bundles.cs" />
     <Compile Include="BundleProcessing\MinifyAssets.cs" />
     <Compile Include="BundleContainer.cs" />
     <Compile Include="Scripts\ParseCoffeeScriptReferences.cs" />
@@ -166,9 +173,10 @@
     <Compile Include="Web\AssetRequestHandler.cs" />
     <Compile Include="Web\CassetteApplicationContainerFactory.cs" />
     <Compile Include="Web\CassetteRoute.cs" />
-    <Compile Include="Web\UrlGenerator.cs" />
+    <Compile Include="UrlGenerator.cs" />
     <Compile Include="Web\DelegateRouteHandler.cs" />
     <Compile Include="Web\InitialConfiguration.cs" />
+    <Compile Include="Web\Jasmine\CassetteConfiguration.cs" />
     <Compile Include="Web\PlaceholderReplacingResponseFilter.cs" />
     <Compile Include="PlaceholderTracker.cs" />
     <Compile Include="Utilities\ByteArrayExtensions.cs" />
@@ -190,6 +198,10 @@
     <ProjectReference Include="..\Cassette.Views\Cassette.Views.csproj">
       <Project>{3A021487-A395-4FE6-9B41-336D0F1E6AD0}</Project>
       <Name>Cassette.Views</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Cassette.Web.Jasmine\Cassette.Web.Jasmine.csproj">
+      <Project>{EF2E2EF3-5A8F-402D-99FD-C8C60C178F63}</Project>
+      <Name>Cassette.Web.Jasmine</Name>
     </ProjectReference>
     <ProjectReference Include="..\Cassette.Web\Cassette.Web.csproj">
       <Project>{733F8032-D649-4E4C-A23E-4A048C33FCAE}</Project>

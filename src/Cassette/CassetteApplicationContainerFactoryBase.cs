@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 using Cassette.Configuration;
-using Cassette.Manifests;
 
 namespace Cassette
 {
@@ -14,7 +13,6 @@ namespace Cassette
         readonly string virtualDirectory;
         readonly object creationLock = new object();
         IEnumerable<ICassetteConfiguration> cassetteConfigurations;
-        BundleCollection bundles;
 
         protected CassetteApplicationContainerFactoryBase(ICassetteConfigurationFactory cassetteConfigurationFactory, CassetteConfigurationSection configurationSection, string physicalDirectory, string virtualDirectory)
         {
@@ -55,40 +53,6 @@ namespace Cassette
             return container;
         }
 
-        CassetteApplicationContainer<T> CreateContainerFromCompileTimeManifest()
-        {
-            using (var file = OpenManifestFile())
-            {
-                var reader = new CassetteManifestReader(file);
-                var manifest = reader.Read();
-                var settings = new CassetteSettings("")
-                {
-                    UrlGenerator = new UrlGenerator(
-                        new VirtualDirectoryPrepender(virtualDirectory),
-                        UrlGenerator.RoutePrefix
-                    )
-                };
-                bundles = new BundleCollection(settings);
-                foreach (var bundle in manifest.CreateBundles())
-                {
-                    bundle.Process(settings);
-                    bundles.Add(bundle);
-                }
-                var bundleContainer = new BundleContainer(bundles);
-                return new CassetteApplicationContainer<T>(() => CreateCassetteApplicationCore(bundleContainer, settings));
-            }
-        }
-
-        FileStream OpenManifestFile()
-        {
-            var filename = Path.Combine(physicalDirectory, configurationSection.PrecompiledManifest);
-            if (!File.Exists(filename))
-            {
-                throw new FileNotFoundException("Cannot find the file \"{0}\" specified by precompiledManifest in the <cassette> configuration section.", filename);
-            }
-            return File.OpenRead(filename);
-        }
-
         protected virtual IEnumerable<ICassetteConfiguration> CreateCassetteConfigurations()
         {
             return cassetteConfigurationFactory.CreateCassetteConfigurations();
@@ -100,39 +64,49 @@ namespace Cassette
             {
                 var cacheVersion = GetConfigurationVersion();
                 var settings = new CassetteSettings(cacheVersion);
-                bundles = new BundleCollection(settings);
-                ExecuteCassetteConfiguration(settings);
-                ProcessBundles(settings);
+                var bundleContainerFactory = settings.GetBundleContainerFactory(CassetteConfigurations);
+                var bundleContainer = bundleContainerFactory.CreateBundleContainer();
 
                 Trace.Source.TraceInformation("IsDebuggingEnabled: {0}", settings.IsDebuggingEnabled);
                 Trace.Source.TraceInformation("Cache version: {0}", cacheVersion);
                 Trace.Source.TraceInformation("Creating Cassette application object");
 
-                var bundleContainer = new BundleContainer(bundles);
                 return CreateCassetteApplicationCore(bundleContainer, settings);
-            }
-        }
-
-        void ProcessBundles(CassetteSettings settings)
-        {
-            foreach (var bundle in bundles)
-            {
-                bundle.Process(settings);
-            }
-        }
-
-        void ExecuteCassetteConfiguration(CassetteSettings settings)
-        {
-            foreach (var configuration in CassetteConfigurations)
-            {
-                Trace.Source.TraceInformation("Executing configuration {0}", configuration.GetType().AssemblyQualifiedName);
-                configuration.Configure(bundles, settings);
             }
         }
 
         protected IEnumerable<ICassetteConfiguration> CassetteConfigurations
         {
             get { return cassetteConfigurations; }
+        }
+
+        CassetteApplicationContainer<T> CreateContainerFromCompileTimeManifest()
+        {
+            var settings = CreateSettingsForBundlesFromCompileTime();
+            var bundleContainerFactory = new CompileTimeManifestBundleContainerFactory(PrecompiledManifestFilename, settings);
+            var bundleContainer = bundleContainerFactory.CreateBundleContainer();
+
+            return new CassetteApplicationContainer<T>(
+                () => CreateCassetteApplicationCore(bundleContainer, settings)
+            );
+        }
+
+        CassetteSettings CreateSettingsForBundlesFromCompileTime()
+        {
+            return new CassetteSettings("")
+            {
+                UrlGenerator = new UrlGenerator(
+                    new VirtualDirectoryPrepender(virtualDirectory),
+                    UrlGenerator.RoutePrefix
+                ),
+                IsHtmlRewritingEnabled = configurationSection.RewriteHtml,
+                AllowRemoteDiagnostics = configurationSection.AllowRemoteDiagnostics
+            };
+        }
+
+        string PrecompiledManifestFilename
+        {
+            get { return Path.Combine(physicalDirectory, configurationSection.PrecompiledManifest); }
         }
     }
 }

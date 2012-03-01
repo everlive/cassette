@@ -51,7 +51,7 @@ namespace Cassette.Manifests
         [Fact]
         public void GivenFileContainsBundleXml_WhenLoadCassetteManifest_ThenManifestIsReadFromXml()
         {
-            var xml = "<?xml version=\"1.0\"?><Cassette LastWriteTimeUtc=\"2012-01-01 00:00\" Version=\"VERSION\"><ScriptBundle Path=\"~\" Hash=\"\"/></Cassette>";
+            var xml = "<?xml version=\"1.0\"?><Cassette LastWriteTimeUtc=\"2012-01-01 00:00 GMT\" Version=\"VERSION\"><ScriptBundle Path=\"~\" Hash=\"\"/></Cassette>";
             GivenFileContains(xml);
 
             var manifest = cache.LoadCassetteManifest();
@@ -59,6 +59,30 @@ namespace Cassette.Manifests
             manifest.LastWriteTimeUtc.ShouldEqual(new DateTime(2012, 1, 1, 0, 0, 0));
             manifest.Version.ShouldEqual("VERSION");
             manifest.BundleManifests.Count.ShouldEqual(1);
+        }
+
+        [Fact]
+        public void GivenInvalidManifest_WhenLoadCassetteManifest_ThenReturnAnEmptyManifest()
+        {
+            var xml = "<?xml version=\"1.0\"?><Cassette LastWriteTimeUtc=\"2012-01-01 00:00 GMT\" Version=\"VERSION\">" +
+                      "<ScriptBundle Path_INVALID_=\"~\" Hash=\"\"/>" +
+                      "</Cassette>";
+            GivenFileContains(xml);
+
+            var manifest = cache.LoadCassetteManifest();
+
+            manifest.BundleManifests.ShouldBeEmpty();
+        }
+
+        [Fact]
+        public void GivenCorruptXmlManifest_WhenLoadCassetteManifest_ThenReturnAnEmptyManifest()
+        {
+            var xml = "<?xml version=\"1.0\"?><Cassette";
+            GivenFileContains(xml);
+
+            var manifest = cache.LoadCassetteManifest();
+
+            manifest.BundleManifests.ShouldBeEmpty();
         }
 
         [Fact]
@@ -78,7 +102,7 @@ namespace Cassette.Manifests
         public void GivenManifestWithBundle_WhenSaveCassetteManifest_ThenXmlLastWriteTimeUtcAttributeIsNow()
         {
             var now = DateTime.UtcNow;
-            now = new DateTime(now.Year, now.Month, now.Day, now.Hour, now.Month, now.Second);
+            now = new DateTime(now.Year, now.Month, now.Day, now.Hour, now.Minute, now.Second, DateTimeKind.Utc);
 
             var manifest = new CassetteManifest("", new BundleManifest[0]);
             cache.SaveCassetteManifest(manifest);
