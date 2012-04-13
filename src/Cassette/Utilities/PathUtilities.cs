@@ -7,9 +7,18 @@ namespace Cassette.Utilities
 {
     static class PathUtilities
     {
+        public static string Combine(params string[] paths)
+        {
+#if !NET35
+            return Path.Combine(paths);
+#else
+            return paths.Aggregate(Path.Combine);
+#endif
+        }
+    
         public static string CombineWithForwardSlashes(params string[] paths)
         {
-            return Path.Combine(paths).Replace('\\', '/');
+            return paths.Aggregate(Path.Combine).Replace('\\', '/');
         }
 
         public static string NormalizePath(string path)
@@ -38,11 +47,11 @@ namespace Cassette.Utilities
             }
             if (isNetworkSharePath)
             {
-                return @"\\" + string.Join(@"\", stack.Reverse());
+                return @"\\" + string.Join(@"\", stack.Reverse().ToArray());
             }
             else
             {
-                return string.Join("/", stack.Reverse());
+                return string.Join("/", stack.Reverse().ToArray());
             }
         }
 

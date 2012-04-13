@@ -19,7 +19,7 @@
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DefineConstants>DEBUG;TRACE;NET40</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
@@ -27,31 +27,48 @@
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
+    <DefineConstants>TRACE;NET40</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug-FX35|AnyCPU'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\Debug-FX35\</OutputPath>
+    <DefineConstants>DEBUG;TRACE;NET35</DefineConstants>
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <DebugType>full</DebugType>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release-FX35|AnyCPU'">
+    <OutputPath>bin\Release-FX35\</OutputPath>
+    <DefineConstants>TRACE;NET35</DefineConstants>
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <Optimize>true</Optimize>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="AjaxMin, Version=4.46.4422.26284, Culture=neutral, PublicKeyToken=21ef50ce11b5d80f, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\AjaxMin.4.46.4422.26284\lib\net20\AjaxMin.dll</HintPath>
     </Reference>
-    <Reference Include="Jurassic, Version=2.1.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Jurassic.2.1.1\lib\Jurassic.dll</HintPath>
-    </Reference>
-    <Reference Include="Microsoft.Practices.ServiceLocation, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <HintPath>..\packages\CommonServiceLocator.1.0\lib\NET35\Microsoft.Practices.ServiceLocation.dll</HintPath>
+    <Reference Condition="'$(TargetFrameworkVersion)' == 'v3.5'" Include="Iesi.Collections">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\Iesi.Collections.3.2.0.4000\lib\Net35\Iesi.Collections.dll</HintPath>
     </Reference>
     <Reference Include="Newtonsoft.Json, Version=4.0.8.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\Newtonsoft.Json.4.0.8\lib\net40\Newtonsoft.Json.dll</HintPath>
+      <HintPath Condition="'$(TargetFrameworkVersion)' == 'v3.5'">..\packages\Newtonsoft.Json.4.0.8\lib\net35\Newtonsoft.Json.dll</HintPath>
+      <HintPath Condition="'$(TargetFrameworkVersion)' == 'v4.0'">..\packages\Newtonsoft.Json.4.0.8\lib\net40\Newtonsoft.Json.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.configuration" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
-    <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Xml" />
+    <Reference Condition="'$(TargetFrameworkVersion)' == 'v4.0'" Include="Microsoft.CSharp" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="..\SharedAssemblyInfo.cs">
@@ -59,6 +76,7 @@
     </Compile>
     <Compile Include="BundleProcessing\AssignHash.cs" />
     <Compile Include="BundleReferenceCollector.cs" />
+    <Compile Include="ConditionalRenderer.cs" />
     <Compile Include="Configuration\CompileTimeManifestBundleContainerFactory.cs" />
     <Compile Include="Configuration\ExternalBundleGenerator.cs" />
     <Compile Include="Configuration\FilePathComparer.cs" />
@@ -110,13 +128,8 @@
     <Compile Include="Configuration\IBundleContainerFactory.cs" />
     <Compile Include="Configuration\ICassetteConfiguration.cs" />
     <Compile Include="HtmlAttributeDictionary.cs" />
-    <Compile Include="HtmlTemplates\CompileJQueryTmpl.cs" />
-    <Compile Include="HtmlTemplates\CompileKnockoutJQueryTmpl.cs" />
     <Compile Include="HtmlTemplates\Manifests\HtmlTemplateBundleManifestBuilder.cs" />
     <Compile Include="HtmlTemplates\Manifests\HtmlTemplateBundleManifest.cs" />
-    <Compile Include="HtmlTemplates\CompileHogan.cs" />
-    <Compile Include="HtmlTemplates\HoganCompiler.cs" />
-    <Compile Include="HtmlTemplates\HoganPipeline.cs" />
     <Compile Include="HtmlTemplates\RegisterTemplatesWithHogan.cs" />
     <Compile Include="HtmlTemplates\RegisterTemplateWithHogan.cs" />
     <Compile Include="HtmlTemplates\HtmlTemplateCommentParser.cs" />
@@ -126,12 +139,8 @@
     <Compile Include="HtmlTemplates\RegisterTemplateWithJQueryTmpl.cs" />
     <Compile Include="HtmlTemplates\AssignHtmlTemplateRenderer.cs" />
     <Compile Include="HtmlTemplates\InlineHtmlTemplateBundleRenderer.cs" />
-    <Compile Include="HtmlTemplates\KnockoutJQueryTmplCompiler.cs" />
     <Compile Include="HtmlTemplates\RemoteHtmlTemplateBundleRenderer.cs" />
     <Compile Include="HtmlTemplates\HtmlTemplatePipeline.cs" />
-    <Compile Include="HtmlTemplates\JQueryTmplCompiler.cs" />
-    <Compile Include="HtmlTemplates\JQueryTmplPipeline.cs" />
-    <Compile Include="HtmlTemplates\KnockoutJQueryTmplPipeline.cs" />
     <Compile Include="Configuration\IFileSearch.cs" />
     <Compile Include="HtmlTemplates\WrapHtmlTemplateInScriptElement.cs" />
     <Compile Include="HtmlTemplates\WrapHtmlTemplatesInScriptElements.cs" />
@@ -173,15 +182,12 @@
     <Compile Include="PlaceholderTracker.cs" />
     <Compile Include="ReferenceBuilder.cs" />
     <Compile Include="Scripts\AssignScriptRenderer.cs" />
-    <Compile Include="Scripts\CoffeeScriptCommentParser.cs" />
     <Compile Include="Scripts\DebugScriptBundleHtmlRenderer.cs" />
-    <Compile Include="Scripts\ExternalScriptBundleHtmlRenderer.cs" />
     <Compile Include="Scripts\Manifests\ExternalScriptBundleManifest.cs" />
     <Compile Include="Scripts\Manifests\ExternalScriptBundleManifestBuilder.cs" />
     <Compile Include="Scripts\Manifests\ExternalScriptBundleManifestReader.cs" />
     <Compile Include="Scripts\Manifests\ExternalScriptBundleManifestWriter.cs" />
     <Compile Include="Scripts\HtmlConstants.cs" />
-    <Compile Include="Scripts\IECoffeeScriptCompiler.cs" />
     <Compile Include="Scripts\JavaScriptCommentParser.cs" />
     <Compile Include="Scripts\JavaScriptReferenceParser.cs" />
     <Compile Include="Scripts\Manifests\ScriptBundleManifestWriter.cs" />
@@ -204,7 +210,6 @@
     <Compile Include="Stylesheets\Manifests\ExternalStylesheetBundleManifestBuilder.cs" />
     <Compile Include="Stylesheets\Manifests\ExternalStylesheetBundleManifestReader.cs" />
     <Compile Include="Stylesheets\Manifests\ExternalStylesheetBundleManifestWriter.cs" />
-    <Compile Include="Stylesheets\ExternalStylesheetHtmlRenderer.cs" />
     <Compile Include="Stylesheets\HtmlConstants.cs" />
     <Compile Include="Stylesheets\Manifests\StylesheetBundleManifest.cs" />
     <Compile Include="Stylesheets\Manifests\StylesheetBundleManifestBuilder.cs" />
@@ -217,11 +222,9 @@
     <Compile Include="BundleDescriptorReader.cs" />
     <Compile Include="Scripts\ExternalScriptBundle.cs" />
     <Compile Include="Stylesheets\ExternalStylesheetBundle.cs" />
-    <Compile Include="Stylesheets\CompileLess.cs" />
     <Compile Include="BundleProcessing\CompileAsset.cs" />
     <Compile Include="Stylesheets\ExpandCssUrlsAssetTransformer.cs" />
     <Compile Include="Stylesheets\ExpandCssUrls.cs" />
-    <Compile Include="Stylesheets\ParseLessReferences.cs" />
     <Compile Include="Trace.cs" />
     <Compile Include="CassetteApplicationBase.cs" />
     <Compile Include="Scripts\InlineScriptBundle.cs" />
@@ -235,7 +238,6 @@
     <Compile Include="AssetReference.cs" />
     <Compile Include="AssetReferenceException.cs" />
     <Compile Include="AssetReferenceType.cs" />
-    <Compile Include="Scripts\CompileCoffeeScript.cs" />
     <Compile Include="BundleProcessing\ConcatenateAssets.cs" />
     <Compile Include="IO\FileSystemFile.cs" />
     <Compile Include="IAsset.cs" />
@@ -246,13 +248,10 @@
     <Compile Include="IBundleFactory.cs" />
     <Compile Include="BundleProcessing\IBundleProcessor.cs" />
     <Compile Include="BundleProcessing\ConcatenatedAsset.cs" />
-    <Compile Include="Stylesheets\LessCompileException.cs" />
-    <Compile Include="Stylesheets\LessCompiler.cs" />
     <Compile Include="Scripts\MicrosoftJavaScriptMinifier.cs" />
     <Compile Include="BundleProcessing\MinifyAssets.cs" />
     <Compile Include="Bundle.cs" />
     <Compile Include="BundleContainer.cs" />
-    <Compile Include="Scripts\ParseCoffeeScriptReferences.cs" />
     <Compile Include="Scripts\ParseJavaScriptReferences.cs" />
     <Compile Include="Scripts\ScriptBundle.cs" />
     <Compile Include="Scripts\ScriptBundleFactory.cs" />
@@ -261,8 +260,8 @@
     <Compile Include="Stylesheets\StylesheetBundleFactory.cs" />
     <Compile Include="UrlGenerator.cs" />
     <Compile Include="Utilities\ByteArrayExtensions.cs" />
-    <Compile Include="Scripts\JurassicCoffeeScriptCompiler.cs" />
-    <Compile Include="Scripts\CoffeeScriptCompileException.cs" />
+    <Compile Condition="'$(TargetFrameworkVersion)' == 'v3.5'" Include="Utilities\EnumT.cs" />
+    <Compile Include="Utilities\HashedSets.cs" />
     <Compile Include="Utilities\JavaScriptUtilities.cs" />
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
@@ -271,6 +270,7 @@
     </Compile>
     <Compile Include="Utilities\Graph.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Condition="'$(TargetFrameworkVersion)' == 'v3.5'" Include="Utilities\Lazy.cs" />
     <Compile Include="Utilities\PathUtilities.cs" />
     <Compile Include="Utilities\StreamExtensions.cs" />
     <Compile Include="Utilities\StringExtensions.cs" />
@@ -285,26 +285,11 @@
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Cassette.nuspec">
+    <None Include="Cassette.nutrans">
       <SubType>Designer</SubType>
     </None>
+    <None Include="Cassette.symbols.nutrans" />
     <None Include="packages.config" />
-    <None Include="Resources\coffeescript.js" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\jqueryTmplCompiler.js" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\jqueryTmplKnockout.js" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\hogan.js" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\dotless.Core\dotless.Core.csproj">
-      <Project>{D7A24E58-68D0-4B10-A324-EA33C822FA56}</Project>
-      <Name>dotless.Core</Name>
-    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

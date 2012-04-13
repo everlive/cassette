@@ -136,7 +136,12 @@ namespace Cassette.Manifests
         XDocument SavedXml()
         {
             var bytes = outputStream.ToArray();
+#if NET35
+            var reader = System.Xml.XmlReader.Create(new MemoryStream(bytes));
+            var xml = XDocument.Load(reader);
+#else
             var xml = XDocument.Load(new MemoryStream(bytes));
+#endif
             return xml;
         }
 

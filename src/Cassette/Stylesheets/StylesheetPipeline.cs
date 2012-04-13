@@ -9,24 +9,17 @@ namespace Cassette.Stylesheets
         public StylesheetPipeline()
         {
             StylesheetMinifier = new MicrosoftStylesheetMinifier();
-            CompileLess = true;
         }
 
         public IAssetTransformer StylesheetMinifier { get; set; }
-        public bool CompileLess { get; set; }
-        // TODO: Obselete this property in next version
-        // Use the EmbedImages extension method instead.
+       
+        // TODO: Delete this property
         public bool ConvertImageUrlsToDataUris { get; set; }
 
         protected override IEnumerable<IBundleProcessor<StylesheetBundle>> CreatePipeline(StylesheetBundle bundle, CassetteSettings settings)
         {
             yield return new AssignStylesheetRenderer();
             yield return new ParseCssReferences();
-            if (CompileLess)
-            {
-                yield return new ParseLessReferences();
-                yield return new CompileLess(new LessCompiler());
-            }
             if (ConvertImageUrlsToDataUris)
             {
                 yield return new ConvertImageUrlsToDataUris();

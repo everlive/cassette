@@ -97,6 +97,7 @@
     <Content Include="assets\styles\images\docs-icon.png" />
     <Content Include="assets\styles\images\contribute-icon.png" />
     <Content Include="assets\styles\images\donate-count.png" />
+    <Content Include="assets\styles\images\donate-icon.png" />
     <Content Include="assets\styles\images\download-background.png" />
     <Content Include="assets\styles\images\download-button-icon.png" />
     <Content Include="assets\styles\images\download-icon.png" />
@@ -122,7 +123,9 @@
     <Content Include="nuget-icon.png" />
     <Content Include="robots.txt" />
     <Content Include="sitemap.xml" />
-    <Content Include="Web.config" />
+    <Content Include="Web.config">
+      <SubType>Designer</SubType>
+    </Content>
     <Content Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
     </Content>
@@ -260,6 +263,9 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="Views\Documentation\Tutorials_TwitterBootstrap.cshtml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Views\Documentation\GettingStarted_Fx35.cshtml" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v10.0\WebApplications\Microsoft.WebApplication.targets" />

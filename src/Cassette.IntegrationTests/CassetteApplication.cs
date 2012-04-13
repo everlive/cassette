@@ -23,7 +23,7 @@ namespace Cassette.IntegrationTests
         {
             RemoveExistingCache();
 
-            storage = IsolatedStorageFile.GetMachineStoreForDomain();
+            storage = IsolatedStorageFile.GetMachineStoreForAssembly();
             routes = new RouteCollection();
             httpContext = new Mock<HttpContextBase>();
             httpContextItems = new Dictionary<string, object>();
@@ -61,6 +61,36 @@ namespace Cassette.IntegrationTests
             }
         }
 
+#if !NET35
+        [Fact]
+        public void CanGetStylesheetBundleA()
+        {
+            using (CreateApplication(bundles => bundles.AddPerSubDirectory<StylesheetBundle>("Styles", b => b.Processor = new StylesheetPipeline().CompileSass())))
+            {
+                using (var http = new HttpTestHarness(routes))
+                {
+                    http.Get("~/_cassette/stylesheetbundle/styles/bundle-a");
+                    http.ResponseOutputStream.ReadToEnd().ShouldEqual("a{color:red}p{border:1px solid red}body{color:#abc}");
+                }
+            }
+        }
+#endif
+
+#if !NET35
+        [Fact]
+        public void CanGetStylesheetBundleB()
+        {
+            using (CreateApplication(bundles => bundles.AddPerSubDirectory<StylesheetBundle>("Styles", b => b.Processor = new StylesheetPipeline().CompileSass())))
+            {
+                using (var http = new HttpTestHarness(routes))
+                {
+                    http.Get("~/_cassette/stylesheetbundle/styles/bundle-b");
+                    http.ResponseOutputStream.ReadToEnd().ShouldEqual("body{color:blue}");
+                }
+            }
+        }
+#endif
+
         [Fact]
         public void GivenDebugMode_ThenCanGetAsset()
         {
@@ -80,7 +110,9 @@ function asset1() {
         [Fact]
         public void GivenDebugMode_ThenGetCoffeeScriptAssetReturnsItCompiledInToJavaScript()
         {
-            using (CreateApplication(bundles => bundles.AddPerSubDirectory<ScriptBundle>("Scripts"), isDebuggingEnabled: true))
+            using (CreateApplication(
+                bundles => bundles.AddPerSubDirectory<ScriptBundle>("Scripts", b=>b.Processor=new ScriptPipeline().CompileCoffeeScript()), 
+                isDebuggingEnabled: true))
             {
                 using (var http = new HttpTestHarness(routes))
                 {
@@ -137,6 +169,31 @@ function asset1() {
             }
         }
 
+        [Fact]
+        public void WhenRenderingExternalScriptBundleWithFallback_ThenHtmlIsExternalScriptAndConditionalScriptBlock()
+        {
+            Action<BundleCollection> config = bundles =>
+            {
+                bundles.Add<ScriptBundle>("~/scripts/bundle-d");
+            };
+
+            using (var app = CreateApplication(config))
+            {
+                app.OnPostMapRequestHandler();
+                var builder = app.GetReferenceBuilder();
+
+                builder.Reference("~/scripts/bundle-d");
+                var html = builder.Render<ScriptBundle>(null);
+
+                html.ShouldEqual(@"<script src=""http://example.com/"" type=""text/javascript""></script>
+<script type=""text/javascript"">
+if(!window.example){
+document.write(unescape('%3Cscript src=""/_cassette/scriptbundle/scripts/bundle-d_324630d9a339e77b9687f404596df7952257b3f2"" type=""text/javascript""%3E%3C/script%3E'));
+}
+</script>");
+            }
+        }
+
         CassetteApplication CreateApplication(Action<BundleCollection> configure, string sourceDirectory = "assets", bool isDebuggingEnabled = false)
         {
             var container = new Mock<ICassetteApplicationContainer<ICassetteApplication>>();
@@ -166,9 +223,19 @@ function asset1() {
 
         void RemoveExistingCache()
         {
-            using (var storage = IsolatedStorageFile.GetMachineStoreForDomain())
+            using (var storage = IsolatedStorageFile.GetMachineStoreForAssembly())
             {
-                storage.Remove();
+#if NET35
+                if (storage.GetFileNames("casette.xml").Length > 0)
+                {
+                    storage.DeleteFile("cassette.xml");
+                }
+#else
+                if (storage.FileExists("cassette.xml"))
+                {
+                    storage.DeleteFile("cassette.xml");
+                }
+#endif
             }
         }
 
@@ -204,6 +271,7 @@ function asset1() {
             Response.Setup(r => r.ApplyAppPathModifier(It.IsAny<string>())).Returns<string>(r => r);
             Response.SetupGet(r => r.OutputStream).Returns(ResponseOutputStream);
             Response.SetupGet(r => r.Cache).Returns(ResponseCache.Object);
+            Response.SetupProperty(r => r.ContentType);
         }
 
         RouteCollection routes;

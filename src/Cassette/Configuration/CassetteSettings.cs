@@ -2,11 +2,15 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Text.RegularExpressions;
+using Cassette.BundleProcessing;
 using Cassette.HtmlTemplates;
 using Cassette.IO;
 using Cassette.Scripts;
 using Cassette.Stylesheets;
 using Cassette.Manifests;
+#if NET35
+using Cassette.Utilities;
+#endif
 
 namespace Cassette.Configuration
 {
@@ -15,16 +19,29 @@ namespace Cassette.Configuration
     /// </summary>
     public class CassetteSettings
     {
-        readonly Lazy<ICassetteManifestCache> bundleCache;
-        ICassetteManifestCache customCassetteManifestCache;
-
+        readonly Lazy<ICassetteManifestCache> cassetteManifestCache;
+        readonly Dictionary<Type, object> defaultBundleProcessors = new Dictionary<Type, object>
+        {
+            { typeof(ScriptBundle), new ScriptPipeline() },
+            { typeof(StylesheetBundle), new StylesheetPipeline() },
+            { typeof(HtmlTemplateBundle), new HtmlTemplatePipeline() },
+        };
+ 
         public CassetteSettings(string cacheVersion)
         {
             Version = cacheVersion;
             DefaultFileSearches = CreateDefaultFileSearches();
             BundleFactories = CreateBundleFactories();
-            bundleCache = new Lazy<ICassetteManifestCache>(() => new CassetteManifestCache(CacheDirectory.GetFile("cassette.xml")));
+            cassetteManifestCache = new Lazy<ICassetteManifestCache>(
+                () => new CassetteManifestCache(CacheDirectory.GetFile("cassette.xml"))
+            );
         }
+
+        /// <summary>
+        /// When true, Cassette has already loaded bundles from a compile-time generated manifest file.
+        /// The application's Cassette configuration MUST NOT add bundles to the bundle collection.
+        /// </summary>
+        public bool IsUsingPrecompiledManifest { get; internal set; }
 
         /// <summary>
         /// When this property is true, Cassette will output debug-friendly assets. When false, combined, minified bundles are used instead.
@@ -66,13 +83,25 @@ namespace Cassette.Configuration
 
         internal string Version { get; set; }
 
-        static Dictionary<Type, IBundleFactory<Bundle>> CreateBundleFactories()
+        public void SetDefaultBundleProcessor<T>(IBundleProcessor<T> processor)
+            where T : Bundle
+        {
+            defaultBundleProcessors[typeof(T)] = processor;
+        }
+
+        public IBundleProcessor<T> GetDefaultBundleProcessor<T>()
+            where T : Bundle
+        {
+            return (IBundleProcessor<T>)defaultBundleProcessors[typeof(T)];
+        }
+
+        Dictionary<Type, IBundleFactory<Bundle>> CreateBundleFactories()
         {
             return new Dictionary<Type, IBundleFactory<Bundle>>
             {
-                { typeof(ScriptBundle), new ScriptBundleFactory() },
-                { typeof(StylesheetBundle), new StylesheetBundleFactory() },
-                { typeof(HtmlTemplateBundle), new HtmlTemplateBundleFactory() }
+                { typeof(ScriptBundle), new ScriptBundleFactory(this) },
+                { typeof(StylesheetBundle), new StylesheetBundleFactory(this) },
+                { typeof(HtmlTemplateBundle), new HtmlTemplateBundleFactory(this) }
             };
         }
 
@@ -100,7 +129,7 @@ namespace Cassette.Configuration
         {
             return new FileSearch
             {
-                Pattern = "*.css;*.less",
+                Pattern = "*.css;*.less;*.scss;*.sass",
                 SearchOption = SearchOption.AllDirectories
             };
         }
@@ -116,8 +145,7 @@ namespace Cassette.Configuration
 
         internal ICassetteManifestCache CassetteManifestCache
         {
-            get { return customCassetteManifestCache ?? bundleCache.Value; }
-            set { customCassetteManifestCache = value; }
+            get { return cassetteManifestCache.Value; }
         }
 
         internal IBundleContainerFactory GetBundleContainerFactory(IEnumerable<ICassetteConfiguration> cassetteConfigurations)

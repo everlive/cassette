@@ -1,36 +1,59 @@
 using System.Collections.Generic;
 using System.Linq;
+#if NET35
+using Iesi.Collections.Generic;
+#endif
+#if !NET35
+using Cassette.Utilities;
+#endif
 
 namespace Cassette
 {
     class BundleReferenceCollector : IBundleVisitor
     {
-        readonly HashSet<AssetReferenceType> validTypes;
+        readonly HashedSet<AssetReferenceType> validTypes;
+		Bundle currentBundle;
 
         public BundleReferenceCollector(params AssetReferenceType[] typesToCollect)
         {
-            CollectedAssetReferences = new List<AssetReference>();
-            validTypes = new HashSet<AssetReferenceType>(typesToCollect);
+            CollectedReferences = new List<CollectedReference>();
+            validTypes = new HashedSet<AssetReferenceType>(typesToCollect);
         }
 
-        public List<AssetReference> CollectedAssetReferences { get; private set; }
+        public List<CollectedReference> CollectedReferences { get; private set; }
 
         public void Visit(Bundle bundle)
         {
+            currentBundle = bundle;
         }
 
         public void Visit(IAsset asset)
         {
-            var assetReferencesToDifferentBundle = asset.References.Where(ShouldCollectReference);
-            foreach (var reference in assetReferencesToDifferentBundle)
+            var assetReferencesToCollect = asset.References.Where(ShouldCollectReference);
+            foreach (var reference in assetReferencesToCollect)
             {
-                CollectedAssetReferences.Add(reference);
+                CollectReference(reference);
             }
+        }
+
+        void CollectReference(AssetReference reference)
+        {
+            CollectedReferences.Add(new CollectedReference
+            {
+                SourceBundle = currentBundle,
+                AssetReference = reference
+            });
         }
 
         bool ShouldCollectReference(AssetReference reference)
         {
             return validTypes.Contains(reference.Type);
+        }
+
+        public class CollectedReference
+        {
+            public Bundle SourceBundle;
+            public AssetReference AssetReference;
         }
     }
 }

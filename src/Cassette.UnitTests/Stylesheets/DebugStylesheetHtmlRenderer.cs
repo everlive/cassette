@@ -12,8 +12,8 @@ namespace Cassette.Stylesheets
         public void GivenBundleWithAssets_WhenRender_ThenLinkForEachAssetIsReturned()
         {
             var bundle = new StylesheetBundle("~/test");
-            bundle.Assets.Add(Mock.Of<IAsset>());
-            bundle.Assets.Add(Mock.Of<IAsset>());
+            bundle.Assets.Add(new StubAsset());
+            bundle.Assets.Add(new StubAsset());
 
             var urlGenerator = new Mock<IUrlGenerator>();
             var assetUrls = new Queue<string>(new[] { "asset1", "asset2" });
@@ -37,8 +37,8 @@ namespace Cassette.Stylesheets
             {
                 Media = "MEDIA"
             };
-            bundle.Assets.Add(Mock.Of<IAsset>());
-            bundle.Assets.Add(Mock.Of<IAsset>());
+            bundle.Assets.Add(new StubAsset());
+            bundle.Assets.Add(new StubAsset());
 
             var urlGenerator = new Mock<IUrlGenerator>();
             var assetUrls = new Queue<string>(new[] { "asset1", "asset2" });
@@ -62,8 +62,8 @@ namespace Cassette.Stylesheets
             {
                 Condition = "CONDITION"
             };
-            bundle.Assets.Add(Mock.Of<IAsset>());
-            bundle.Assets.Add(Mock.Of<IAsset>());
+            bundle.Assets.Add(new StubAsset());
+            bundle.Assets.Add(new StubAsset());
 
             var urlGenerator = new Mock<IUrlGenerator>();
             var assetUrls = new Queue<string>(new[] { "asset1", "asset2" });
@@ -79,6 +79,33 @@ namespace Cassette.Stylesheets
                 Environment.NewLine +
                 "<link href=\"asset2\" type=\"text/css\" rel=\"stylesheet\"/>" + Environment.NewLine +
                 "<![endif]-->"
+            );
+        }
+
+        [Fact]
+        public void GivenStylesheetNotIECondition_WhenRender_ThenConditionalCommentWrapsLinksButLeavesStylesheetVisibleToAllBrowsers()
+        {
+            var bundle = new StylesheetBundle("~/test")
+            {
+                Condition = "(gt IE 9)|!(IE)"
+            };
+            bundle.Assets.Add(Mock.Of<IAsset>());
+            bundle.Assets.Add(Mock.Of<IAsset>());
+
+            var urlGenerator = new Mock<IUrlGenerator>();
+            var assetUrls = new Queue<string>(new[] { "asset1", "asset2" });
+            urlGenerator.Setup(g => g.CreateAssetUrl(It.IsAny<IAsset>()))
+                        .Returns(assetUrls.Dequeue);
+
+            var renderer = new DebugStylesheetHtmlRenderer(urlGenerator.Object);
+            var html = renderer.Render(bundle);
+
+            html.ShouldEqual(
+                "<!--[if " + bundle.Condition + "]><!-->" + Environment.NewLine +
+                "<link href=\"asset1\" type=\"text/css\" rel=\"stylesheet\"/>" +
+                Environment.NewLine +
+                "<link href=\"asset2\" type=\"text/css\" rel=\"stylesheet\"/>" + Environment.NewLine +
+                "<!-- <![endif]-->"
             );
         }
     }

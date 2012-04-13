@@ -2,6 +2,9 @@
 using System.Linq;
 using Should;
 using Xunit;
+#if NET35
+using System.Collections.ObjectModel;
+#endif
 
 namespace Cassette.Utilities
 {
@@ -178,4 +181,14 @@ namespace Cassette.Utilities
             graph.FindCycles().ShouldBeEmpty();
         }
     }
+
+#if NET35
+    internal static class SetExtensions
+    {
+        public static bool SetEquals<T>(this Iesi.Collections.Generic.ISet<T> set, IEnumerable<T> otherSet)
+        {
+            return set.ContainsAll(new Collection<T>(new List<T>(otherSet)));
+        }
+    }
+#endif
 }

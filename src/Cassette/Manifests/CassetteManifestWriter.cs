@@ -5,6 +5,9 @@ using System.Xml.Linq;
 using Cassette.HtmlTemplates.Manifests;
 using Cassette.Scripts.Manifests;
 using Cassette.Stylesheets.Manifests;
+#if NET35
+using System.Xml;
+#endif
 
 namespace Cassette.Manifests
 {
@@ -68,7 +71,14 @@ namespace Cassette.Manifests
         void WriteToOutputStream()
         {
             var document = new XDocument(cassetteElement);
+#if NET35
+            using (var writer = XmlWriter.Create(outputStream))
+            {
+                document.Save(writer);
+            }
+#else
             document.Save(outputStream);
+#endif
         }
     }
 }

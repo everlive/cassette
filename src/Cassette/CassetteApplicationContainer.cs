@@ -3,6 +3,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
+#if NET35
+using Cassette.Utilities;
+#endif
 
 namespace Cassette
 {
@@ -29,6 +32,13 @@ namespace Cassette
         {
             if (getApplication == null) throw new ArgumentNullException("getApplication");
             _getApplication = getApplication;
+        }
+
+        internal static event Action Shutdown = delegate { };
+
+        internal static void TriggerShutdown()
+        {
+            Shutdown();
         }
     }
 

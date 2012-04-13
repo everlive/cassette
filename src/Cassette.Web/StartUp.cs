@@ -8,44 +8,22 @@ using System.Web.Compilation;
 using System.Web.Configuration;
 using System.Web.Routing;
 using Cassette.Configuration;
-using Microsoft.Web.Infrastructure.DynamicModuleHelper;
-
-[assembly: WebActivator.PreApplicationStartMethod(
-    typeof(Cassette.Web.StartUp),
-    "PreApplicationStart"
-)]
-[assembly: WebActivator.PostApplicationStartMethod(
-    typeof(Cassette.Web.StartUp), 
-    "PostApplicationStart"
-)]
-[assembly: WebActivator.ApplicationShutdownMethod(
-    typeof(Cassette.Web.StartUp),
-    "ApplicationShutdown"
-)]
 
 namespace Cassette.Web
 {
     /// <summary>
     /// Controls the lifetime of the Cassette infrastructure by handling application startup and shutdown.
     /// </summary>
-    public static class StartUp
+    internal static class StartUp
     {
         static CassetteApplicationContainer<CassetteApplication> _container;
         static readonly StartUpTraceRecorder StartUpTraceRecorder = new StartUpTraceRecorder();
-
-        // ReSharper disable UnusedMember.Global
-        public static void PreApplicationStart()
-        {
-            StartUpTraceRecorder.Start();
-            Trace.Source.TraceInformation("Registering CassetteHttpModule.");
-            DynamicModuleUtility.RegisterModule(typeof(CassetteHttpModule));
-        }
-        // ReSharper restore UnusedMember.Global
-
+ 
         // ReSharper disable UnusedMember.Global
         // This runs *after* Global.asax Application_Start.
-        public static void PostApplicationStart()
+        public static void ApplicationStart()
         {
+            StartUpTraceRecorder.Start();
             Trace.Source.TraceInformation("PostApplicationStart.");
             try
             {
@@ -102,7 +80,7 @@ namespace Cassette.Web
             Trace.Source.TraceInformation("Application shutdown - disposing resources.");
             _container.Dispose();
             IsolatedStorageContainer.Dispose();
-            Scripts.IECoffeeScriptCompiler.SingleThreadedWorker.Singleton.Stop();
+            CassetteApplicationContainer.TriggerShutdown();
         }
         // ReSharper restore UnusedMember.Global
 

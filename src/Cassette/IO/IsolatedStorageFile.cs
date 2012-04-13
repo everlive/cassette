@@ -1,6 +1,9 @@
 ﻿using System;
 using System.IO;
 using Storage = System.IO.IsolatedStorage.IsolatedStorageFile;
+#if NET35
+using System.IO.IsolatedStorage;
+#endif
 
 namespace Cassette.IO
 {
@@ -36,20 +39,35 @@ namespace Cassette.IO
 
         public Stream Open(FileMode mode, FileAccess access, FileShare fileShare)
         {
+#if NET35
+            return new IsolatedStorageFileStream(systemFilename, mode, access, fileShare, Storage);
+#else
             return Storage.OpenFile(systemFilename, mode, access, fileShare);
+#endif
         }
 
         public bool Exists
         {
             get
             {
+#if NET35
+                return Storage.GetFileNames(systemFilename).Length > 0;
+#else
                 return Storage.FileExists(systemFilename);
+#endif
             }
         }
 
         public DateTime LastWriteTimeUtc
         {
-            get { return Storage.GetLastWriteTime(systemFilename).UtcDateTime; }
+            get
+            {
+#if NET35
+                throw new NotImplementedException();
+#else
+                return Storage.GetLastWriteTime(systemFilename).UtcDateTime;
+#endif
+            }
         }
 
         public void Delete()

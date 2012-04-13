@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using Cassette.IO;
+using Cassette.Utilities;
 
 namespace Cassette.Configuration
 {
@@ -15,7 +16,7 @@ namespace Cassette.Configuration
 
         FileMatch[] matches;
         List<IFile> outputFile;
-        HashSet<string> filenames;
+        HashedCompareSet<string> filenames;
 
         public IEnumerable<IFile> Apply(IEnumerable<IFile> files)
         {
@@ -48,10 +49,10 @@ namespace Cassette.Configuration
 
         void BuildFilenameSet()
         {
-            filenames = new HashSet<string>(
-                from item in matches
+            filenames = new HashedCompareSet<string>(
+                (from item in matches
                 where item.Success
-                select item.FileName,
+                select item.FileName).ToArray(),
                 StringComparer.OrdinalIgnoreCase
             );
         }

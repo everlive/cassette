@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Cassette.Configuration;
 using Cassette.IO;
 
 namespace Cassette.Manifests
@@ -24,15 +25,15 @@ namespace Cassette.Manifests
         public byte[] Content { get; set; }
         public Func<string> Html { get; set; }
 
-        public Bundle CreateBundle()
+        public Bundle CreateBundle(CassetteSettings settings)
         {
-            var bundle = CreateBundleCore();
+            var bundle = CreateBundleCore(settings);
             bundle.Hash = Hash;
             bundle.ContentType = ContentType;
             bundle.PageLocation = PageLocation;
             if (Assets.Count > 0)
             {
-                bundle.Assets.Add(CreateCachedBundleContent());
+                bundle.Assets.Add(CreateCachedBundleContent(settings));
             }
             AddReferencesToBundle(bundle);
             AddHtmlAttributesToBundle(bundle);
@@ -47,16 +48,20 @@ namespace Cassette.Manifests
             }
         }
 
-        protected abstract Bundle CreateBundleCore();
+        protected abstract Bundle CreateBundleCore(CassetteSettings settings);
 
-        CachedBundleContent CreateCachedBundleContent()
+        CachedBundleContent CreateCachedBundleContent(CassetteSettings settings)
         {
-            return new CachedBundleContent(Content, CreateOriginalAssets());
+            return new CachedBundleContent(Content, CreateOriginalAssets(), settings);
         }
 
         IEnumerable<IAsset> CreateOriginalAssets()
         {
+#if NET35
+            return Assets.Select(assetManifest => new AssetFromManifest(assetManifest)).Cast<IAsset>();
+#else
             return Assets.Select(assetManifest => new AssetFromManifest(assetManifest));
+#endif
         }
 
         void AddReferencesToBundle(Bundle bundle)

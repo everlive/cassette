@@ -6,6 +6,9 @@ using Cassette.BundleProcessing;
 using Cassette.Configuration;
 using Cassette.Manifests;
 using Cassette.Utilities;
+#if NET35
+using Iesi.Collections.Generic;
+#endif
 
 namespace Cassette
 {
@@ -14,7 +17,7 @@ namespace Cassette
     {
         readonly string path;
         readonly List<IAsset> assets = new List<IAsset>();
-        readonly HashSet<string> references = new HashSet<string>();
+        readonly HashedSet<string> references = new HashedSet<string>();
         readonly HtmlAttributeDictionary htmlAttributes = new HtmlAttributeDictionary();
 
         protected Bundle(string applicationRelativePath)
@@ -67,15 +70,16 @@ namespace Cassette
         /// </summary>
         public byte[] Hash { get; internal set; }
 
-        internal virtual string Url
+        internal string Url
         {
             get
             {
-                var type = GetType().Name.ToLowerInvariant();
                 var pathWithoutPrefix = path.TrimStart('~', '/');
-                return type + "/" + pathWithoutPrefix + "_" + Hash.ToHexString();
+                return UrlBundleTypeArgument + "/" + pathWithoutPrefix + "_" + (Hash != null ? Hash.ToHexString() : "");
             }
         }
+
+        protected abstract string UrlBundleTypeArgument { get; }
 
         internal IEnumerable<string> References
         {
@@ -116,6 +120,7 @@ namespace Cassette
         protected abstract void ProcessCore(CassetteSettings settings);
 
         internal bool IsProcessed { get; private set; }
+        internal bool IsFromDescriptorFile { get; set; }
 
         internal abstract string Render();
 
@@ -167,8 +172,8 @@ namespace Cassette
                 var details = string.Join(
                     Environment.NewLine,
                     cycles.Select(
-                        cycle => "[" + string.Join(", ", cycle.Select(a => a.SourceFile.FullPath)) + "]"
-                    )
+                        cycle => "[" + string.Join(", ", cycle.Select(a => a.SourceFile.FullPath).ToArray()) + "]"
+                    ).ToArray()
                 );
                 throw new InvalidOperationException("Cycles detected in asset references:" + Environment.NewLine + details);
             }

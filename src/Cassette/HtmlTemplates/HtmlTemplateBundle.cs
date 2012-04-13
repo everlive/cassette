@@ -11,7 +11,6 @@ namespace Cassette.HtmlTemplates
             : base(applicationRelativePath)
         {
             ContentType = "text/html";
-            Processor = new HtmlTemplatePipeline();
         }
 
         public IBundleProcessor<HtmlTemplateBundle> Processor { get; set; }
@@ -41,6 +40,11 @@ namespace Cassette.HtmlTemplates
         {
             var builder = new HtmlTemplateBundleManifestBuilder { IncludeContent = includeProcessedBundleContent };
             return builder.BuildManifest(this);
+        }
+
+        protected override string UrlBundleTypeArgument
+        {
+            get { return "htmltemplatebundle"; }
         }
     }
 }

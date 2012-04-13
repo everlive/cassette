@@ -22,13 +22,22 @@ namespace Cassette.Scripts.Manifests
             bundle = new ScriptBundle("~/path")
             {
                 PageLocation = "body",
-                Hash = new byte[] { 1, 2, 3 }
+                Hash = new byte[] { 1, 2, 3 },
+                Processor = new ScriptPipeline()
             };
-            asset = StubAsset();
+            asset = new StubAsset
+            {
+                CreateStream = () => new MemoryStream(bundleContent),
+                References =
+                    {
+                        new AssetReference("~/path/asset/file", asset, 0, AssetReferenceType.RawFilename)
+                    }
+            };
             bundle.Assets.Add(asset);
             bundle.AddReference("~/reference/path");
             bundle.Process(new CassetteSettings(""));
-            bundle.Renderer = new ConstantHtmlRenderer<ScriptBundle>("");
+            var urlModifier = Mock.Of<IUrlModifier>();
+            bundle.Renderer = new ConstantHtmlRenderer<ScriptBundle>("", urlModifier);
 
             manifest = builder.BuildManifest(bundle);
         }
@@ -115,31 +124,16 @@ namespace Cassette.Scripts.Manifests
         [Fact]
         public void ManifestConditionEqualsBundleCondition()
         {
+            var urlModifier = Mock.Of<IUrlModifier>();
             bundle = new ScriptBundle("~")
             {
                 Condition = "CONDITION",
-                Renderer = new ConstantHtmlRenderer<ScriptBundle>("")
+                Renderer = new ConstantHtmlRenderer<ScriptBundle>("", urlModifier)
             };
             builder = new ScriptBundleManifestBuilder();
             var scriptBundleManifest = builder.BuildManifest(bundle);
 
             scriptBundleManifest.Condition.ShouldEqual(bundle.Condition);
-        }
-
-        IAsset StubAsset()
-        {
-            var stubAsset = new Mock<IAsset>();
-            stubAsset.SetupGet(a => a.SourceFile.FullPath).Returns("~/path/asset");
-            stubAsset.SetupGet(a => a.References).Returns(new[]
-            {
-                new AssetReference("~/path/asset/file", stubAsset.Object, 0, AssetReferenceType.RawFilename)
-            });
-            stubAsset.Setup(a => a.OpenStream()).Returns(() => new MemoryStream(bundleContent));
-
-            stubAsset.Setup(a => a.Accept(It.IsAny<IBundleVisitor>()))
-                     .Callback<IBundleVisitor>(v => v.Visit(stubAsset.Object));
-
-            return stubAsset.Object;
         }
     }
 }

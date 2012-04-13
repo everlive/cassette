@@ -105,6 +105,22 @@ namespace Cassette
             exception.Message.ShouldEqual("Reference error in bundle descriptor for \"~/bundle1\". Cannot find \"~/bundle2\".");
         }
 
+        [Fact]
+        public void GivenAssetWithReferenceToNonexistantFileAndBundleIsFromDescriptorFile_WhenConstructed_ThenAssetReferenceIsIgnored()
+        {
+            var bundle = new TestableBundle("~");
+            var asset = new StubAsset();
+            var badReference = new AssetReference("~/NOT-FOUND.js", asset, 1, AssetReferenceType.DifferentBundle);
+            asset.References.Add(badReference);
+            bundle.Assets.Add(asset);
+
+            bundle.IsFromDescriptorFile = true;
+            
+            Assert.DoesNotThrow(
+                () => new BundleContainer(new[] { bundle })
+            );
+        }
+
         void AssetAcceptsVisitor(Mock<IAsset> asset)
         {
             asset.Setup(a => a.Accept(It.IsAny<IBundleVisitor>()))
@@ -157,7 +173,7 @@ namespace Cassette
         {
             var externalBundle1 = new ExternalScriptBundle("http://test.com/test1.js");
             var externalBundle2 = new ExternalScriptBundle("http://test.com/test2.js");
-            var container = new BundleContainer(Enumerable.Empty<ScriptBundle>());
+            var container = new BundleContainer(Enumerable.Empty<Bundle>());
             var results = container.IncludeReferencesAndSortBundles(new[] { externalBundle1, externalBundle2 });
             results.SequenceEqual(new[] { externalBundle1, externalBundle2 }).ShouldBeTrue();
         }

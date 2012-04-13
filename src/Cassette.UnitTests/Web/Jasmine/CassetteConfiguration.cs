@@ -1,4 +1,5 @@
-﻿using Cassette.Configuration;
+﻿#if !NET35
+using Cassette.Configuration;
 using Cassette.Scripts;
 using Cassette.Stylesheets;
 using Should;
@@ -32,3 +33,4 @@ namespace Cassette.Web.Jasmine
         }
     }
 }
+#endif

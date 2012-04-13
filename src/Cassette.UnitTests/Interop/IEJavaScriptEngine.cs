@@ -24,7 +24,7 @@ namespace Cassette.Interop
             using (var engine = new IEJavaScriptEngine())
             {
                 engine.Initialize();
-                engine.LoadLibrary(Properties.Resources.coffeescript);
+                engine.LoadLibrary(Scripts.Properties.Resources.coffeescript);
                 engine.LoadLibrary("function compile(code) { return CoffeeScript.compile(code); }");
                 var js = engine.CallFunction<string>("compile", "x = 1");
                 js.ShouldEqual("(function() {\n  var x;\n\n  x = 1;\n\n}).call(this);\n");
@@ -69,6 +69,8 @@ namespace Cassette.Interop
             }
         }
 
+        // TODO: Someone smarter can figure out how to make this test pass in FX35. (kamranayub)
+#if !NET35
         [Fact]
         public void GivenGlobalAddedToEngine_WhenScriptUsesGlobalFunctionWithCallback_ThenCallbackInvoked()
         {
@@ -84,10 +86,12 @@ function go() {
     });
     return result;
 }");
+
                 var result = engine.CallFunction<string>("go");
                 result.ShouldEqual("done");
             }
         }
+#endif
 
         [ComVisible(true)]
         public class GlobalData
@@ -96,12 +100,13 @@ function go() {
             {
                 return "Hello, " + name;
             }
-
+#if !NET35
             public void process(dynamic callback)
             {
                 // By the magic of 'dynamic' this actually figures out the correct COM-voodoo required to call the callback!!
-                callback("done");
+                callback("done");                
             }
+#endif
         }
     }
 }

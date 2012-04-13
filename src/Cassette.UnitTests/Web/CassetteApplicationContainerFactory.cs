@@ -6,6 +6,7 @@ using Cassette.Configuration;
 using Cassette.Manifests;
 using Cassette.Scripts;
 using Cassette.Stylesheets;
+using Cassette.Utilities;
 using Moq;
 using Should;
 using Xunit;
@@ -27,7 +28,7 @@ namespace Cassette.Web
             using (var path = new TempDirectory())
             {
                 Directory.CreateDirectory(Path.Combine(path, "styles"));
-                File.WriteAllText(Path.Combine(path, "styles", "asset.css"), "/* @reference http://example.com */");
+                File.WriteAllText(PathUtilities.Combine(path, "styles", "asset.css"), "/* @reference http://example.com */");
 
                 var configuration = new StubConfiguration(bundles => bundles.Add<StylesheetBundle>("styles"));
                 var factory = new CassetteApplicationContainerFactory(
@@ -150,7 +151,19 @@ namespace Cassette.Web
             }
         }
 
+        [Fact]
+        public void GivenCompileTimeManifest_WhenCreateContainer_ThenSettingsIsUsingPrecompiledManifestEqualsTrue()
+        {
+            using (var path = new TempDirectory())
+            {
+                CompileTimeManifestWithBundleExists(path);
 
+                var factory = CreateCassetteApplicationContainerFactory(path);
+                var container = factory.CreateContainer();
+
+                container.Application.Settings.IsUsingPrecompiledManifest.ShouldBeTrue();
+            }
+        }
 
         void CompileTimeManifestWithBundleExists(string rootDirectory)
         {
@@ -158,7 +171,7 @@ namespace Cassette.Web
             var bundleManifest = bundle.CreateBundleManifest(true);
             var cassetteManifest = new CassetteManifest("", new[] { bundleManifest });
 
-            var manifestFilename = Path.Combine(rootDirectory, "App_Data", "cassette.xml");
+            var manifestFilename = PathUtilities.Combine(rootDirectory, "App_Data", "cassette.xml");
             Directory.CreateDirectory(Path.Combine(rootDirectory, "App_Data"));
             using (var outputStream = File.Open(manifestFilename, FileMode.Create, FileAccess.Write))
             {
@@ -171,10 +184,16 @@ namespace Cassette.Web
 
         ScriptBundle StubBundle()
         {
-            var bundle = new ScriptBundle("~");
-            bundle.Assets.Add(StubAsset("~/test.js"));
+            var bundle = new ScriptBundle("~")
+            {
+                Processor = new ScriptPipeline()
+            };
+            var asset = new StubAsset(fullPath: "~/test.js");
+            asset.References.Add(new AssetReference("http://example.org/", asset, 1, AssetReferenceType.Url));
+            bundle.Assets.Add(asset);
             bundle.Process(new CassetteSettings(""));
-            bundle.Renderer = new ConstantHtmlRenderer<ScriptBundle>("");
+            var urlModifier = Mock.Of<IUrlModifier>();
+            bundle.Renderer = new ConstantHtmlRenderer<ScriptBundle>("", urlModifier);
             return bundle;
         }
 
@@ -188,31 +207,6 @@ namespace Cassette.Web
                 false,
                 Mock.Of<HttpContextBase>
             );
-        }
-
-        IAsset StubAsset(string filename)
-        {
-            var asset = new Mock<IAsset>();
-            asset
-                .Setup(a => a.OpenStream())
-                .Returns(Stream.Null);
-
-            asset
-                .Setup(a => a.SourceFile.FullPath)
-                .Returns(filename);
-
-            asset
-                .Setup(a => a.Accept(It.IsAny<IBundleVisitor>()))
-                .Callback<IBundleVisitor>(v => v.Visit(asset.Object));
-
-            asset
-                .SetupGet(a => a.References)
-                .Returns(new[]
-                {
-                    new AssetReference("http://example.org/", asset.Object, 1, AssetReferenceType.Url)
-                });
-
-            return asset.Object;
         }
     }
 }
